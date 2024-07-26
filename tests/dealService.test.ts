@@ -10,7 +10,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 describe('Deal Service', () => {
   it('should fetch deals', async () => {
     const deals = { data: [{ id: 1, title: 'Test Deal' }] };
-    mockedAxios.get.mockResolvedValue(deals);
+    mockedAxios.get.mockResolvedValue({ data: deals });
 
     const result = await fetchDeals();
     expect(result).toEqual(deals.data);
@@ -18,7 +18,7 @@ describe('Deal Service', () => {
 
   it('should create a new deal', async () => {
     const newDeal = { id: 1, title: 'Test Deal' };
-    mockedAxios.post.mockResolvedValue({ data: newDeal });
+    mockedAxios.post.mockResolvedValue({ data: { data: newDeal } });
 
     const result = await createDeal(newDeal);
     expect(result).toEqual(newDeal);
@@ -32,7 +32,7 @@ describe('Deal Service', () => {
 
   it('should modify a deal', async () => {
     const updatedDeal = { id: 1, title: 'Updated Test Deal' };
-    mockedAxios.put.mockResolvedValue({ data: updatedDeal });
+    mockedAxios.put.mockResolvedValue({ data: { data: updatedDeal } });
 
     const result = await modifyDeal('1', updatedDeal);
     expect(result).toEqual(updatedDeal);
