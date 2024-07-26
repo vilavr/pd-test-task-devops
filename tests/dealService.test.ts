@@ -1,0 +1,34 @@
+import axios from 'axios';
+import { fetchDeals, createDeal, modifyDeal } from '../src/services/dealService';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe('Deal Service', () => {
+  it('should fetch deals', async () => {
+    const deals = { data: [{ id: 1, title: 'Test Deal' }] };
+    mockedAxios.get.mockResolvedValue(deals);
+
+    const result = await fetchDeals();
+    expect(result).toEqual(deals.data);
+  });
+
+  it('should create a new deal', async () => {
+    const newDeal = { id: 1, title: 'Test Deal' };
+    mockedAxios.post.mockResolvedValue({ data: newDeal });
+
+    const result = await createDeal(newDeal);
+    expect(result).toEqual(newDeal);
+  });
+
+  it('should modify a deal', async () => {
+    const updatedDeal = { id: 1, title: 'Updated Test Deal' };
+    mockedAxios.put.mockResolvedValue({ data: updatedDeal });
+
+    const result = await modifyDeal('1', updatedDeal);
+    expect(result).toEqual(updatedDeal);
+  });
+});
