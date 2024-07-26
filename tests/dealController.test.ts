@@ -25,11 +25,29 @@ describe('Deal Controller', () => {
     expect(response.body.data).toHaveProperty('title', 'Test Deal');
   });
 
+  it('should handle creating a deal with invalid data', async () => {
+    const invalidDeal = { invalidField: 'Invalid Data' };
+    const response = await request(app).post('/deals').send(invalidDeal);
+    expect(response.status).toBe(500);
+  });
+
   it('should update an existing deal', async () => {
     const updatedDeal = { title: 'Updated Test Deal' };
-    const response = await request(app).put('/deals/1').send(updatedDeal); // use a valid deal id for your test
+    const response = await request(app).put('/deals/1').send(updatedDeal); 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data');
     expect(response.body.data).toHaveProperty('title', 'Updated Test Deal');
+  });
+
+  it('should handle updating a non-existent deal', async () => {
+    const updatedDeal = { title: 'Updated Test Deal' };
+    const response = await request(app).put('/deals/9999').send(updatedDeal); 
+    expect(response.status).toBe(500);
+  });
+
+  it('should handle updating a deal with invalid data', async () => {
+    const invalidDeal = { invalidField: 'Invalid Data' };
+    const response = await request(app).put('/deals/1').send(invalidDeal); 
+    expect(response.status).toBe(500);
   });
 });

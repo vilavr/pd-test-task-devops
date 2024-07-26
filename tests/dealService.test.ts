@@ -24,11 +24,23 @@ describe('Deal Service', () => {
     expect(result).toEqual(newDeal);
   });
 
+  it('should handle error when creating a new deal', async () => {
+    mockedAxios.post.mockRejectedValue(new Error('API Error'));
+
+    await expect(createDeal({ title: 'Test Deal' })).rejects.toThrow('API Error');
+  });
+
   it('should modify a deal', async () => {
     const updatedDeal = { id: 1, title: 'Updated Test Deal' };
     mockedAxios.put.mockResolvedValue({ data: updatedDeal });
 
     const result = await modifyDeal('1', updatedDeal);
     expect(result).toEqual(updatedDeal);
+  });
+
+  it('should handle error when modifying a deal', async () => {
+    mockedAxios.put.mockRejectedValue(new Error('API Error'));
+
+    await expect(modifyDeal('1', { title: 'Updated Test Deal' })).rejects.toThrow('API Error');
   });
 });
