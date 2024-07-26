@@ -46,5 +46,5 @@ npm test
 ```
 
 ## CI/CD
-This project uses GitHub Actions for CI/CD.
+This project uses GitHub Actions for CI/CD checks.
 
