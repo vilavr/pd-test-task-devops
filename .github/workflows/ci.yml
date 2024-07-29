@@ -38,9 +38,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Install jq
-      run: sudo apt-get update && sudo apt-get install -y jq
-
     - name: Record build start time
       id: build_start
       run: echo "build_start_time=$(date +%s)" >> $GITHUB_ENV
@@ -89,26 +86,48 @@ jobs:
 
     - name: Create Summary
       run: |
-        echo "## CI Summary" > summary.md
-        echo "" >> summary.md
-        echo "### Lint Results" >> summary.md
-        echo '```' >> summary.md
-        cat lint-results.txt >> summary.md
-        echo '```' >> summary.md
-        echo "" >> summary.md
-        echo "### Test Results" >> summary.md
-        echo '```' >> summary.md
-        cat test-results/test-results.json | jq '.' >> summary.md
-        echo '```' >> summary.md
-        echo "" >> summary.md
-        echo "### CI/CD Metrics" >> summary.md
-        echo '```' >> summary.md
-        echo "- Build Time: ${{ env.build_time }} seconds" >> summary.md
-        echo "- Lint Time: ${{ env.lint_time }} seconds" >> summary.md
-        echo "- Test Time: $(jq '.testResults | map(.duration) | add / 1000' test-results/test-results.json | awk '{printf "%.2f", $1}') seconds" >> summary.md
-        echo '```' >> summary.md
+        const fs = require('fs');
+        const lintFilePath = 'lint-results.txt';
+        const testFilePath = 'test-results/test-results.json';
 
-        # Upload summary
-        gh pr comment ${{ github.event.pull_request.number }} --body "$(cat summary.md)"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
+        const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
+
+        const totalTests = testResults ? testResults.numTotalTests : 0;
+        const passedTests = testResults ? testResults.numPassedTests : 0;
+        const failedTests = testResults ? testResults.numFailedTests : 0;
+        const testExecutionTime = testResults ? testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000 : 0;
+
+        const summary = `
+          ## CI Summary
+
+          ### Lint Results
+          \`\`\`
+          ${lintResults}
+          \`\`\`
+
+          ### Test Results
+          \`\`\`
+          - Total Tests: ${totalTests}
+          - Passed Tests: ${passedTests}
+          - Failed Tests: ${failedTests}
+          - Test Execution Time: ${testExecutionTime.toFixed(2)} seconds
+          \`\`\`
+
+          ### CI/CD Metrics
+          \`\`\`
+          - Build Time: ${process.env.build_time} seconds
+          - Lint Time: ${process.env.lint_time} seconds
+          - Test Time: ${testExecutionTime.toFixed(2)} seconds
+          \`\`\`
+        `;
+
+        fs.writeFileSync('summary.txt', summary);
+      id: create_summary
+
+    - name: Upload Summary
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: summary
+        path: summary.txt
