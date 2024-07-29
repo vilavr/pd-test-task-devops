@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: '*'
   pull_request:
     branches:
       - main
@@ -31,6 +29,9 @@ jobs:
 
     - name: Build Docker image
       run: docker build -t pd-test-task-devops .
+
+    - name: Lint code
+      run: docker run --rm pd-test-task-devops npm run lint
 
     - name: Run tests in Docker container
       env:

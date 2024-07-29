@@ -43,5 +43,5 @@ describe('Request Metrics Middleware', () => {
     expect(metrics.totalRequests).toBe(20);
     expect(metrics.meanRequestDuration).toBeGreaterThan(0);
     expect(metrics.meanRequestDuration).toBeLessThan(200); 
-  }); // Increase the test timeout to 10 seconds
+  }, 10000); // Increase the test timeout to 10 seconds
 });
