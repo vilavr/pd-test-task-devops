@@ -10,9 +10,9 @@ const ctrfResults = {
       tests: jestResults.numTotalTests,
       passed: jestResults.numPassedTests,
       failed: jestResults.numFailedTests,
-      pending: jestResults.numPendingTests,
-      skipped: jestResults.numSkippedTests,
-      other: jestResults.numTodoTests,
+      pending: jestResults.numPendingTests || 0, // add default values if not present
+      skipped: jestResults.numSkippedTests || 0,
+      other: jestResults.numTodoTests || 0,
       start: Math.floor(new Date(jestResults.startTime).getTime() / 1000),
       stop: Math.floor(Date.now() / 1000)
     },
