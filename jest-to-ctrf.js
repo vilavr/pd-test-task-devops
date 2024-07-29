@@ -1,31 +1,34 @@
 const fs = require('fs');
-const path = require('path');
+const jestResults = require('./test-results/test-results.json');
 
-// Read the Jest results
-const jestResultsPath = path.resolve('test-results/test-results.json');
-const jestResults = JSON.parse(fs.readFileSync(jestResultsPath, 'utf8'));
-
-// Transform Jest results to CTRF format
 const ctrfResults = {
-  tests: jestResults.testResults.flatMap(testFile => 
-    testFile.assertionResults.map(assertion => ({
-      name: assertion.fullName,
-      status: assertion.status === 'passed' ? 'pass' : 'fail',
-      duration: assertion.duration,
-      error: assertion.failureMessages && assertion.failureMessages.length > 0 ? assertion.failureMessages.join('\n') : null
-    }))
-  )
+  results: {
+    tool: {
+      name: 'jest'
+    },
+    summary: {
+      tests: jestResults.numTotalTests,
+      passed: jestResults.numPassedTests,
+      failed: jestResults.numFailedTests,
+      pending: jestResults.numPendingTests,
+      skipped: jestResults.numSkippedTests,
+      other: jestResults.numTodoTests,
+      start: Math.floor(new Date(jestResults.startTime).getTime() / 1000),
+      stop: Math.floor(Date.now() / 1000)
+    },
+    tests: jestResults.testResults.flatMap(suite =>
+      suite.assertionResults.map(test => ({
+        name: test.fullName,
+        status: test.status,
+        duration: test.duration || 0,
+        message: test.failureMessages ? test.failureMessages.join('\n') : null,
+        trace: test.failureMessages ? test.failureMessages.join('\n').split('\n').slice(-1)[0] : null,
+        flaky: false,
+        retries: 0
+      }))
+    )
+  }
 };
 
-// Ensure the CTRF directory exists
-const ctrfDir = path.resolve('test-results');
-if (!fs.existsSync(ctrfDir)) {
-  fs.mkdirSync(ctrfDir, { recursive: true });
-}
-
-// Write the CTRF results
-const ctrfResultsPath = path.resolve(ctrfDir, 'ctrf-results.json');
-fs.writeFileSync(ctrfResultsPath, JSON.stringify(ctrfResults, null, 2), 'utf8');
-
-// Log the CTRF results for debugging
+fs.writeFileSync('./test-results/ctrf-results.json', JSON.stringify(ctrfResults, null, 2));
 console.log('CTRF Results:', JSON.stringify(ctrfResults, null, 2));
