@@ -18,4 +18,8 @@ export const requestMetrics = {
     meanRequestDuration: requestDurations.reduce((a, b) => a + b, 0) / requestDurations.length || 0,
     totalRequests: requestCount,
   }),
+  resetMetrics: () => {
+    requestCount = 0;
+    requestDurations.length = 0;
+  },
 };
