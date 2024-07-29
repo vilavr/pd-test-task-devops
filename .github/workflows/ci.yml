@@ -98,32 +98,31 @@ jobs:
             ## CI Summary
 
             ### Lint Results
-            ```
+            \`\`\`
             ${lintResults}
-            ```
+            \`\`\`
 
             ### Test Results
-            ```
+            \`\`\`
             - Total Tests: ${totalTests}
             - Passed Tests: ${passedTests}
             - Failed Tests: ${failedTests}
             - Test Execution Time: ${testExecutionTime.toFixed(2)} seconds
-            ```
-
-            ![Test Coverage](coverage/badge.svg)
+            \`\`\`
 
             ### CI/CD Metrics
-            ```
-            - Build Time: ${{ env.build_time }} seconds
-            - Lint Time: ${{ env.lint_time }} seconds
+            \`\`\`
+            - Build Time: ${process.env.build_time} seconds
+            - Lint Time: ${process.env.lint_time} seconds
             - Test Time: ${testExecutionTime.toFixed(2)} seconds
-            ```
+            \`\`\`
           `;
 
           const issueNumber = github.context.payload.pull_request ? github.context.payload.pull_request.number : github.context.runId;
 
           github.rest.issues.createComment({
-            ...context.repo,
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
             issue_number: issueNumber,
             body: summary
           });
