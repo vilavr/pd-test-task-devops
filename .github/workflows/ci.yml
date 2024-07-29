@@ -74,6 +74,9 @@ jobs:
       run: |
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json
 
+    - name: Set permissions for test results directory
+      run: chmod -R 755 test-results
+
     - name: Convert Jest results to CTRF
       run: node jest-to-ctrf.js
 
