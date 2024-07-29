@@ -3,9 +3,11 @@ FROM node:22
 
 WORKDIR /usr/src/app
 
+# Copy only package.json and package-lock.json first
+# This allows Docker to cache the npm install step if these files haven't changed
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci --only=production
 
 COPY . .
 
