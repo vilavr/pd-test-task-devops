@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 # This allows Docker to cache the npm install step if these files haven't changed
 COPY package*.json ./
 
-RUN npm ci --only=production
+RUN NODE_ENV=production npm ci
 
 COPY . .
 
