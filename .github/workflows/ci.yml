@@ -135,12 +135,3 @@ jobs:
       with:
         name: summary
         path: summary.txt
-
-    - name: Trigger Code Analysis
-      run: |
-        curl -X POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Content-Type: application/json" \
-          --data '{"event_type": "run-code-analysis"}' \
-          https://api.github.com/repos/${{ github.repository }}/dispatches
