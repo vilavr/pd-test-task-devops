@@ -73,7 +73,7 @@ jobs:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json
-    
+
     - name: Debug - List files
       run: ls -al test-results
 
@@ -85,7 +85,7 @@ jobs:
         path: test-results/test-results.json
 
     - name: Create Summary
-      uses: actions/github-script@v4
+      uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs');
@@ -135,13 +135,13 @@ jobs:
       with:
         name: summary
         path: summary.txt
-    
+
     - name: Trigger Code Analysis
-      uses: actions/github-script@v4
+      uses: actions/github-script@v6
       with:
         script: |
-            const { Octokit } = require('@octokit/action');
-            const octokit = new Octokit();
+            const { Octokit } = require("@octokit/rest");
+            const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
             
             octokit.request('POST /repos/{owner}/{repo}/dispatches', {
                 owner: context.repo.owner,
