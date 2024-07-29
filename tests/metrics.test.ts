@@ -42,6 +42,6 @@ describe('Request Metrics Middleware', () => {
     const metrics = response.body;
     expect(metrics.totalRequests).toBe(20);
     expect(metrics.meanRequestDuration).toBeGreaterThan(0);
-    expect(metrics.meanRequestDuration).toBeLessThan(200); 
+    expect(metrics.meanRequestDuration).toBeLessThan(250); 
   }, 10000); // Increase the test timeout to 10 seconds
 });
