@@ -72,8 +72,11 @@ jobs:
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
-        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results.json:/usr/src/app/test-results.json pd-test-task-devops npm test -- --json --outputFile=/usr/src/app/test-results.json
-
+        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json
+    
+    - name: Debug - List files
+      run: ls -al test-results
+    
     - name: Debug - List files
       run: ls -al
 
