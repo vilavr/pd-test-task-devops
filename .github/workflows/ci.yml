@@ -40,33 +40,33 @@ jobs:
 
     - name: Record build start time
       id: build_start
-      run: echo "::set-output name=time::$(date +%s)"
+      run: echo "build_start_time=$(date +%s)" >> $GITHUB_ENV
 
     - name: Build Docker image
       run: docker build -t pd-test-task-devops .
 
     - name: Record build end time
       id: build_end
-      run: echo "::set-output name=time::$(date +%s)"
+      run: echo "build_end_time=$(date +%s)" >> $GITHUB_ENV
 
     - name: Calculate build time
       id: build_time
-      run: echo "::set-output name=time::$(( ${{ steps.build_end.outputs.time }} - ${{ steps.build_start.outputs.time }} ))"
+      run: echo "build_time=$(( ${{ env.build_end_time }} - ${{ env.build_start_time }} ))" >> $GITHUB_ENV
 
     - name: Record lint start time
       id: lint_start
-      run: echo "::set-output name=time::$(date +%s)"
+      run: echo "lint_start_time=$(date +%s)" >> $GITHUB_ENV
 
     - name: Lint code
       run: docker run --rm pd-test-task-devops npm run lint > lint-results.txt
 
     - name: Record lint end time
       id: lint_end
-      run: echo "::set-output name=time::$(date +%s)"
+      run: echo "lint_end_time=$(date +%s)" >> $GITHUB_ENV
 
     - name: Calculate lint time
       id: lint_time
-      run: echo "::set-output name=time::$(( ${{ steps.lint_end.outputs.time }} - ${{ steps.lint_start.outputs.time }} ))"
+      run: echo "lint_time=$(( ${{ env.lint_end_time }} - ${{ env.lint_start_time }} ))" >> $GITHUB_ENV
 
     - name: Run tests in Docker container
       env:
@@ -114,14 +114,16 @@ jobs:
 
             ### CI/CD Metrics
             ```
-            - Build Time: ${{ steps.build_time.outputs.time }} seconds
-            - Lint Time: ${{ steps.lint_time.outputs.time }} seconds
+            - Build Time: ${{ env.build_time }} seconds
+            - Lint Time: ${{ env.lint_time }} seconds
             - Test Time: ${testExecutionTime.toFixed(2)} seconds
             ```
           `;
 
+          const issueNumber = github.context.payload.pull_request ? github.context.payload.pull_request.number : github.context.runId;
+
           github.rest.issues.createComment({
             ...context.repo,
-            issue_number: context.runId,
+            issue_number: issueNumber,
             body: summary
           });
