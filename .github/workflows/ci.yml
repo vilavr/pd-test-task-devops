@@ -1,4 +1,4 @@
-name: CI
+name: CI and Code Analysis
 
 on:
   push:
@@ -135,3 +135,29 @@ jobs:
       with:
         name: summary
         path: summary.txt
+
+  code_analysis:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Check for Dependency Updates
+      uses: dependabot/fetch-metadata@v1
+
+    - name: Install Dependency-Check
+      run: |
+        wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
+        unzip dependency-check-6.3.2-release.zip
+
+    - name: Run Dependency-Check
+      run: |
+        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL
+
+    - name: Upload Dependency-Check Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: dependency-check-report
+        path: dependency-check-report
