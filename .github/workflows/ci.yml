@@ -74,6 +74,13 @@ jobs:
       run: |
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json
 
+    - name: Convert Jest results to CTRF
+      run: node jest-to-ctrf.js
+
+    - name: Publish CTRF Test Summary Results
+      run: npx github-actions-ctrf summary test-results/ctrf-results.json
+      if: always()
+
     - name: Debug - List files
       run: ls -al test-results
 
@@ -84,9 +91,57 @@ jobs:
         name: test-results
         path: test-results/test-results.json
 
-    - name: Publish CTRF Test Summary Results
-      run: npx github-actions-ctrf summary test-results/test-results.json
+    - name: Create Summary
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const lintFilePath = 'lint-results.txt';
+          const testFilePath = 'test-results/ctrf-results.json';
+      
+          const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
+          const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
+      
+          const totalTests = testResults ? testResults.tests.length : 0;
+          const passedTests = testResults ? testResults.tests.filter(test => test.status === 'pass').length : 0;
+          const failedTests = testResults ? testResults.tests.filter(test => test.status === 'fail').length : 0;
+          const testExecutionTime = testResults ? testResults.tests.reduce((acc, test) => acc + test.duration, 0) / 1000 : 0;
+      
+          const summary = `
+            ## CI Summary
+      
+            ### Lint Results
+            \`\`\`
+            ${lintResults}
+            \`\`\`
+      
+            ### Test Results
+            \`\`\`
+            - Total Tests: ${totalTests}
+            - Passed Tests: ${passedTests}
+            - Failed Tests: ${failedTests}
+            - Test Execution Time: ${testExecutionTime.toFixed(2)} seconds
+            \`\`\`
+      
+            ### CI/CD Metrics
+            \`\`\`
+            - Build Time: ${process.env.build_time} seconds
+            - Lint Time: ${process.env.lint_time} seconds
+            - Test Time: ${testExecutionTime.toFixed(2)} seconds
+            \`\`\`
+          `;
+      
+          fs.writeFileSync('summary.txt', summary);
+          console.log(summary);
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Summary
       if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: summary
+        path: summary.txt
 
   code_analysis:
     needs: build
@@ -117,7 +172,6 @@ jobs:
 
   security_analysis:
     needs: build
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
