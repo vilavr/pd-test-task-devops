@@ -135,3 +135,18 @@ jobs:
       with:
         name: summary
         path: summary.txt
+    
+    - name: Trigger Code Analysis
+      uses: actions/github-script@v4
+      with:
+        script: |
+            const { Octokit } = require('@octokit/action');
+            const octokit = new Octokit();
+            
+            octokit.request('POST /repos/{owner}/{repo}/dispatches', {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                event_type: 'run-code-analysis'
+            });
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
