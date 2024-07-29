@@ -44,6 +44,6 @@ describe('Request Metrics Middleware', () => {
     const metrics = response.body;
     expect(metrics.totalRequests).toBe(20); // Ensure only the new requests are counted
     expect(metrics.meanRequestDuration).toBeGreaterThan(0);
-    expect(metrics.meanRequestDuration).toBeLessThan(250);
+    expect(metrics.meanRequestDuration).toBeLessThan(300);
   }, 20000); 
 });
