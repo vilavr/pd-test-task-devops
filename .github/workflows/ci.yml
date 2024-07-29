@@ -19,17 +19,6 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Cache Node.js modules
-      uses: actions/cache@v2
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Install dependencies
-      run: npm ci
-
     - name: Cache Docker layers
       uses: actions/cache@v2
       with:
@@ -38,14 +27,90 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
+    - name: Record build start time
+      id: build_start
+      run: echo "::set-output name=time::$(date +%s)"
+
     - name: Build Docker image
       run: docker build -t pd-test-task-devops .
 
+    - name: Record build end time
+      id: build_end
+      run: echo "::set-output name=time::$(date +%s)"
+
+    - name: Calculate build time
+      id: build_time
+      run: echo "::set-output name=time::$(( ${{ steps.build_end.outputs.time }} - ${{ steps.build_start.outputs.time }} ))"
+
+    - name: Record lint start time
+      id: lint_start
+      run: echo "::set-output name=time::$(date +%s)"
+
     - name: Lint code
-      run: docker run --rm pd-test-task-devops npm run lint
+      run: docker run --rm pd-test-task-devops npm run lint > lint-results.txt
+
+    - name: Record lint end time
+      id: lint_end
+      run: echo "::set-output name=time::$(date +%s)"
+
+    - name: Calculate lint time
+      id: lint_time
+      run: echo "::set-output name=time::$(( ${{ steps.lint_end.outputs.time }} - ${{ steps.lint_start.outputs.time }} ))"
 
     - name: Run tests in Docker container
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
-        docker run --rm -e API_TOKEN=$API_TOKEN pd-test-task-devops npm test
+        docker run --rm -e API_TOKEN=$API_TOKEN pd-test-task-devops npm test -- --json --outputFile=test-results.json
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: test-results
+        path: test-results.json
+
+    - name: Create Summary
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const fs = require('fs');
+          const lintResults = fs.readFileSync('lint-results.txt', 'utf8');
+          const testResults = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+
+          const totalTests = testResults.numTotalTests;
+          const passedTests = testResults.numPassedTests;
+          const failedTests = testResults.numFailedTests;
+          const testExecutionTime = testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000;
+
+          const summary = `
+            ## CI Summary
+
+            ### Lint Results
+            ```
+            ${lintResults}
+            ```
+
+            ### Test Results
+            ```
+            - Total Tests: ${totalTests}
+            - Passed Tests: ${passedTests}
+            - Failed Tests: ${failedTests}
+            - Test Execution Time: ${testExecutionTime.toFixed(2)} seconds
+            ```
+
+            ![Test Coverage](coverage/badge.svg)
+
+            ### CI/CD Metrics
+            ```
+            - Build Time: ${{ steps.build_time.outputs.time }} seconds
+            - Lint Time: ${{ steps.lint_time.outputs.time }} seconds
+            - Test Time: ${testExecutionTime.toFixed(2)} seconds
+            ```
+          `;
+
+          github.rest.issues.createComment({
+            ...context.repo,
+            issue_number: context.runId,
+            body: summary
+          });
