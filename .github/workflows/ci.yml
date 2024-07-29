@@ -72,7 +72,10 @@ jobs:
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
-        docker run --rm -e API_TOKEN=$API_TOKEN pd-test-task-devops npm test -- --json --outputFile=test-results.json
+        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results.json:/usr/src/app/test-results.json pd-test-task-devops npm test -- --json --outputFile=test-results.json
+
+    - name: Debug - List files
+      run: ls -al
 
     - name: Upload Test Results
       if: always()
@@ -86,13 +89,18 @@ jobs:
       with:
         script: |
           const fs = require('fs');
-          const lintResults = fs.readFileSync('lint-results.txt', 'utf8');
-          const testResults = JSON.parse(fs.readFileSync('test-results.json', 'utf8'));
+          const path = require('path');
 
-          const totalTests = testResults.numTotalTests;
-          const passedTests = testResults.numPassedTests;
-          const failedTests = testResults.numFailedTests;
-          const testExecutionTime = testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000;
+          const lintFilePath = 'lint-results.txt';
+          const testFilePath = 'test-results.json';
+
+          const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
+          const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
+
+          const totalTests = testResults ? testResults.numTotalTests : 0;
+          const passedTests = testResults ? testResults.numPassedTests : 0;
+          const failedTests = testResults ? testResults.numFailedTests : 0;
+          const testExecutionTime = testResults ? testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000 : 0;
 
           const summary = `
             ## CI Summary
