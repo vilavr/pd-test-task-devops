@@ -1,14 +1,24 @@
 const fs = require('fs');
+const path = require('path');
 
-const jestResults = JSON.parse(fs.readFileSync('test-results/test-results.json', 'utf8'));
+const jestResultsPath = path.resolve('test-results/test-results.json');
+const jestResults = JSON.parse(fs.readFileSync(jestResultsPath, 'utf8'));
+
+// Transform Jest results to CTRF format
 const ctrfResults = {
-  tests: jestResults.testResults.map(testResult => ({
-    file: testResult.name,
-    name: testResult.name,
-    duration: testResult.endTime - testResult.startTime,
-    status: testResult.status === 'passed' ? 'pass' : 'fail',
-    message: testResult.message,
-  })),
+  tests: jestResults.testResults.map(test => ({
+    name: test.fullName,
+    duration: test.duration,
+    status: test.status === 'passed' ? 'pass' : 'fail',
+    error: test.failureMessages.length > 0 ? test.failureMessages.join('\n') : null
+  }))
 };
+const ctrfDir = path.resolve('test-results');
+if (!fs.existsSync(ctrfDir)) {
+  fs.mkdirSync(ctrfDir, { recursive: true });
+}
 
-fs.writeFileSync('test-results/ctrf-results.json', JSON.stringify(ctrfResults, null, 2));
+const ctrfResultsPath = path.resolve(ctrfDir, 'ctrf-results.json');
+fs.writeFileSync(ctrfResultsPath, JSON.stringify(ctrfResults, null, 2), 'utf8');
+
+console.log('CTRF Results:', JSON.stringify(ctrfResults, null, 2));
