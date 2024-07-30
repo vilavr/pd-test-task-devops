@@ -113,10 +113,16 @@ jobs:
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
 
+    - name: Install dependencies on base branch
+      run: npm ci
+
+    - name: Run tests with coverage on base branch
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
+      run: npx nyc npm test
+
     - name: Generate base NYC report
       run: |
-        npm ci
-        npx nyc npm test
         npx nyc report --reporter json-summary --report-dir .base_nyc_output --exclude-after-remap false
 
     - name: Report NYC coverage
