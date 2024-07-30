@@ -1,4 +1,3 @@
-
 name: CI and Code Analysis
 
 on:
@@ -31,6 +30,7 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
+
     - name: Install dependencies
       run: npm ci
 
@@ -41,6 +41,7 @@ jobs:
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
+
     - name: Record build start time
       id: build_start
       run: echo "build_start_time=$(date +%s)" >> $GITHUB_ENV
@@ -78,10 +79,10 @@ jobs:
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results -v $PWD/custom-coverage:/usr/src/app/custom-coverage pd-test-task-devops bash -c "npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json && npm run coverage && chmod -R 755 /usr/src/app/test-results && node jest-to-ctrf.js && chmod -R 755 /usr/src/app/custom-coverage"
    
     - name: Generate Coverage Badges
-      run: docker run --rm -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops npx jest-coverage-badges
+      run: docker run --rm -v $PWD/custom-coverage:/usr/src/app/custom-coverage pd-test-task-devops npx jest-coverage-badges --input-dir ./custom-coverage
 
     - name: Debug - List files
-      run: ls -al coverage
+      run: ls -al custom-coverage
 
     - name: Upload Test Results
       if: always()
@@ -95,7 +96,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: coverage
-        path: coverage
+        path: custom-coverage
 
     - name: Upload CTRF Results
       if: always()
@@ -104,101 +105,29 @@ jobs:
         name: ctrf-results
         path: test-results/ctrf-results.json
 
-    - name: Create Summary
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const fs = require('fs');
-          const lintFilePath = 'lint-results.txt';
-          const testFilePath = 'test-results/test-results.json';
-          const coverageSummaryPath = 'coverage/coverage-summary.json';
-      
-          const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
-          const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
-          const coverageSummary = fs.existsSync(coverageSummaryPath) ? JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8')) : null;
-      
-          const totalTests = testResults ? testResults.numTotalTests : 0;
-          const passedTests = testResults ? testResults.numPassedTests : 0;
-          const failedTests = testResults ? testResults.numFailedTests : 0;
-          const testExecutionTime = testResults ? testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000 : 0;
-      
-          const summary = `
-            ## CI Summary
-      
-            ### Lint Results
-            \`\`\`
-            ${lintResults}
-            \`\`\`
-      
-            ### Test Results
-            \`\`\`
-            - Total Tests: ${totalTests}
-            - Passed Tests: ${passedTests}
-            - Failed Tests: ${failedTests}
-            - Test Execution Time: ${testExecutionTime.toFixed(2)} seconds
-            \`\`\`
-      
-            ### CI/CD Metrics
-            \`\`\`
-            - Build Time: ${process.env.build_time} seconds
-            - Lint Time: ${process.env.lint_time} seconds
-            - Test Time: ${testExecutionTime.toFixed(2)} seconds
-            \`\`\`
-
-            ### Coverage Summary
-            \`\`\`
-            ${coverageSummary ? JSON.stringify(coverageSummary, null, 2) : 'No coverage summary found.'}
-            \`\`\`
-            ![Coverage Badge](coverage/badge.svg)
-          `;
-      
-          fs.writeFileSync('summary.txt', summary);
-          console.log(summary);
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Add to job summary
-      run: |
-        echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
-        echo "### Lint Results" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "$(cat lint-results.txt)" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "### Test Results" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Total Tests: $(jq '.numTotalTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
-        echo "- Passed Tests: $(jq '.numPassedTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
-        echo "- Failed Tests: $(jq '.numFailedTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
-        echo "- Test Execution Time: $(jq '[.testResults[].duration] | add / 1000' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "### CI/CD Metrics" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Build Time: ${build_time} seconds" >> $GITHUB_STEP_SUMMARY
-        echo "- Lint Time: ${lint_time} seconds" >> $GITHUB_STEP_SUMMARY
-        echo "- Test Time: $(jq '[.testResults[].duration] | add / 1000' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "### Coverage Summary" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "$(cat coverage/coverage-summary.json)" >> $GITHUB_STEP_SUMMARY
-        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "![Coverage Badge](coverage/badge.svg)" >> $GITHUB_STEP_SUMMARY
-    - name: Upload Summary
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: summary
-        path: summary.txt
     - name: Publish CTRF Test Summary Results
       run: npx github-actions-ctrf summary test-results/ctrf-results.json
       if: always()
+
     - name: Publish CTRF Detailed Test Summary Results
       run: npx github-actions-ctrf tests test-results/ctrf-results.json
       if: always()
+
     - name: Publish CTRF Failed Test Summary Results
       run: npx github-actions-ctrf failed test-results/ctrf-results.json
       if: always()
+
     - name: Publish CTRF Flaky Test Summary Results
       run: npx github-actions-ctrf flaky test-results/ctrf-results.json
       if: always()
+
+    - name: Report Vitest Coverage
+      if: always() 
+      uses: davelosert/vitest-coverage-report-action@v2
+      with:
+        json-summary-path: './custom-coverage/coverage-summary.json'
+        json-final-path: './custom-coverage/coverage-final.json'
+
   code_analysis:
     needs: build
     if: github.event_name == 'pull_request'
