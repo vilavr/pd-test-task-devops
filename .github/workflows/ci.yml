@@ -110,6 +110,9 @@ jobs:
     - name: Fetch base branch for comparison
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
 
+    - name: Stash changes
+      run: git stash
+
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
 
@@ -124,6 +127,12 @@ jobs:
     - name: Generate base NYC report
       run: |
         npx nyc report --reporter json-summary --report-dir .base_nyc_output --exclude-after-remap false
+
+    - name: Checkout pull request branch
+      run: git checkout ${{ github.event.pull_request.head.ref }}
+
+    - name: Apply stashed changes
+      run: git stash pop
 
     - name: Report NYC coverage
       uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
