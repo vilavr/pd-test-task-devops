@@ -8,7 +8,7 @@ module.exports = {
   reporters: [
     'default',
     [
-      'jest-json-reporter',
+      'json',
       {
         outputFile: 'test-results/test-results.json',
       },
