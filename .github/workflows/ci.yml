@@ -76,13 +76,13 @@ jobs:
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
-        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results -v $PWD/custom-coverage:/usr/src/app/custom-coverage pd-test-task-devops bash -c "npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json && npm run coverage && chmod -R 755 /usr/src/app/test-results && node jest-to-ctrf.js && chmod -R 755 /usr/src/app/custom-coverage"
+        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops bash -c "npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json && npm run coverage && chmod -R 755 /usr/src/app/test-results && node jest-to-ctrf.js && chmod -R 755 /usr/src/app/coverage"
    
     - name: Generate Coverage Badges
-      run: docker run --rm -v $PWD/custom-coverage:/usr/src/app/custom-coverage pd-test-task-devops npx jest-coverage-badges --input-dir ./custom-coverage
+      run: docker run --rm -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops npx jest-coverage-badges
 
     - name: Debug - List files
-      run: ls -al custom-coverage
+      run: ls -al coverage
 
     - name: Upload Test Results
       if: always()
@@ -96,7 +96,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: coverage
-        path: custom-coverage
+        path: coverage
 
     - name: Upload CTRF Results
       if: always()
@@ -125,9 +125,9 @@ jobs:
       if: always() 
       uses: davelosert/vitest-coverage-report-action@v2
       with:
-        json-summary-path: './custom-coverage/coverage-summary.json'
-        json-final-path: './custom-coverage/coverage-final.json'
-
+        json-summary-path: './coverage/coverage-summary.json'
+        json-final-path: './coverage/coverage-final.json'
+        
   code_analysis:
     needs: build
     if: github.event_name == 'pull_request'
