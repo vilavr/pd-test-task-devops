@@ -10,7 +10,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 1000
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -82,14 +85,17 @@ jobs:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: npx nyc npm test
 
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-report
-        path: coverage
+    - name: Generate NYC report
+      run: |
+        npx nyc report \
+          --reporter json-summary \
+          --report-dir nyc-coverage-report \
+          --exclude-after-remap false
 
-    - name: Coverage summary
-      run: npx nyc report --reporter=text-summary
+    - name: Report NYC coverage
+      uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
+      with:
+        coverage_file: "nyc-coverage-report/coverage-summary.json"
 
   code_analysis:
     needs: build
