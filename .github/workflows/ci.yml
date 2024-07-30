@@ -5,6 +5,10 @@ on:
     branches: '*'
   pull_request:
     branches: '*'
+    
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   build:
