@@ -4,6 +4,6 @@ module.exports = {
     testMatch: ['**/tests/**/*.test.ts'],
     collectCoverage: true,
     coverageDirectory: 'coverage',
-    coverageReporters: ['json', 'lcov', 'text', 'clover'],
+    coverageReporters: ['json-summary', 'lcov', 'text', 'clover'],
   };
   
