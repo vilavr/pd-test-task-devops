@@ -5,10 +5,10 @@
   "main": "src/app.ts",
   "scripts": {
     "start": "ts-node src/app.ts",
-    "test": "nyc --reporter=html --reporter=text jest",
-    "coverage": "jest --coverage && jest-coverage-badges",
-    "test:vitest": "vitest --coverage",
-    "lint": "eslint . --ext .ts"
+    "test": "jest",
+    "coverage": "jest --coverage",
+    "lint": "eslint . --ext .ts",
+    "coverage:nyc": "nyc --reporter=html --reporter=json-summary npm test"
   },
   "keywords": [],
   "author": "",
