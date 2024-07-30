@@ -38,35 +38,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Record build start time
-      id: build_start
-      run: echo "build_start_time=$(date +%s)" >> $GITHUB_ENV
-
     - name: Build Docker image
       run: docker build -t pd-test-task-devops .
 
-    - name: Record build end time
-      id: build_end
-      run: echo "build_end_time=$(date +%s)" >> $GITHUB_ENV
-
-    - name: Calculate build time
-      id: build_time
-      run: echo "build_time=$(( ${{ env.build_end_time }} - ${{ env.build_start_time }} ))" >> $GITHUB_ENV
-
-    - name: Record lint start time
-      id: lint_start
-      run: echo "lint_start_time=$(date +%s)" >> $GITHUB_ENV
-
     - name: Lint code
       run: docker run --rm pd-test-task-devops npm run lint > lint-results.txt
-
-    - name: Record lint end time
-      id: lint_end
-      run: echo "lint_end_time=$(date +%s)" >> $GITHUB_ENV
-
-    - name: Calculate lint time
-      id: lint_time
-      run: echo "lint_time=$(( ${{ env.lint_end_time }} - ${{ env.lint_start_time }} ))" >> $GITHUB_ENV
 
     - name: Run tests and collect coverage in Docker container
       env:
@@ -113,10 +89,6 @@ jobs:
       run: npx github-actions-ctrf failed test-results/ctrf-results.json
       if: always()
 
-    - name: Publish CTRF Flaky Test Summary Results
-      run: npx github-actions-ctrf flaky test-results/ctrf-results.json
-      if: always()
-
     - name: Report NYC coverage
       uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
       with:
@@ -143,6 +115,7 @@ jobs:
       with:
         name: dependency-check-report
         path: dependency-check-report
+
   security_analysis:
     needs: build
     runs-on: ubuntu-latest
