@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         ref: ${{ github.event.pull_request.head.sha }}
-        fetch-depth: 1000
+        fetch-depth: 0  # Fetch all history for accurate base comparison
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -103,10 +103,15 @@ jobs:
     - name: Coverage summary
       run: npx nyc report --reporter=text-summary
 
+    - name: Fetch base branch for comparison
+      run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
+
     - name: Report NYC coverage
       uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
       with:
         coverage_file: "nyc-coverage-report/coverage-summary.json"
+        base_coverage_file: ".base_nyc_output/coverage-summary.json" 
+        comment_template_file: "./comment-template.md" 
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
   code_analysis:
