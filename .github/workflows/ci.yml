@@ -39,7 +39,6 @@ jobs:
     - name: Lint code
       run: docker run --rm pd-test-task-devops npm run lint > lint-results.txt
 
-   
     - name: Run tests in Docker container
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
@@ -62,11 +61,10 @@ jobs:
         name: ctrf-results
         path: test-results/ctrf-results.json
 
-   
     - name: Publish CTRF Test Summary Results
       run: npx github-actions-ctrf summary test-results/ctrf-results.json
       if: always()
-      
+
     - name: Publish CTRF Detailed Test Summary Results
       run: npx github-actions-ctrf tests test-results/ctrf-results.json
       if: always()
@@ -74,6 +72,23 @@ jobs:
     - name: Publish CTRF Failed Test Summary Results
       run: npx github-actions-ctrf failed test-results/ctrf-results.json
       if: always()
+
+    # NYC Coverage steps
+    - name: Install NYC
+      run: npm install nyc --save-dev
+
+    - name: Run tests with coverage
+      run: npx nyc npm test
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: coverage
+
+    - name: Coverage summary
+      run: npx nyc report --reporter=text-summary
+      
   code_analysis:
     needs: build
     if: github.event_name == 'pull_request'
