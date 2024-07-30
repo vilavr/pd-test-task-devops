@@ -78,7 +78,7 @@ jobs:
       run: docker run --rm -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops npx jest-coverage-badges
 
     - name: Debug - List files
-      run: ls -al test-results
+      run: ls -al coverage
 
     - name: Upload Test Results
       if: always()
@@ -108,10 +108,12 @@ jobs:
           const fs = require('fs');
           const lintFilePath = 'lint-results.txt';
           const testFilePath = 'test-results/test-results.json';
+          const coverageSummaryPath = 'coverage/coverage-summary.json';
           const coverageBadge = 'coverage/badge.svg';
       
           const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
           const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
+          const coverageSummary = fs.existsSync(coverageSummaryPath) ? JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8')) : null;
       
           const totalTests = testResults ? testResults.numTotalTests : 0;
           const passedTests = testResults ? testResults.numPassedTests : 0;
@@ -140,11 +142,42 @@ jobs:
             - Lint Time: ${process.env.lint_time} seconds
             - Test Time: ${testExecutionTime.toFixed(2)} seconds
             \`\`\`
+
+            ### Coverage Summary
+            \`\`\`
+            ${coverageSummary ? JSON.stringify(coverageSummary, null, 2) : 'No coverage summary found.'}
+            \`\`\`
             ![Coverage Badge](coverage/badge.svg)
           `;
       
           fs.writeFileSync('summary.txt', summary);
           console.log(summary);
+          
+          // Add to job summary
+          console.log(summary)
+          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### Lint Results" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${lintResults}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Total Tests: ${totalTests}" >> $GITHUB_STEP_SUMMARY
+          echo "- Passed Tests: ${passedTests}" >> $GITHUB_STEP_SUMMARY
+          echo "- Failed Tests: ${failedTests}" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Execution Time: ${testExecutionTime.toFixed(2)} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### CI/CD Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Time: ${process.env.build_time} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint Time: ${process.env.lint_time} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Time: ${testExecutionTime.toFixed(2)} seconds" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${coverageSummary ? JSON.stringify(coverageSummary, null, 2) : 'No coverage summary found.'}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "![Coverage Badge](coverage/badge.svg)" >> $GITHUB_STEP_SUMMARY
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
