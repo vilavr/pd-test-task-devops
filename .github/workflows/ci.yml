@@ -5,7 +5,7 @@ on:
     branches: '*'
   pull_request:
     branches: '*'
-    
+
 permissions:
   contents: read
   pull-requests: write
@@ -110,12 +110,21 @@ jobs:
     - name: Fetch base branch for comparison
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
 
+    - name: Checkout base branch
+      run: git checkout ${{ github.event.pull_request.base.ref }}
+
+    - name: Generate base NYC report
+      run: |
+        npm ci
+        npx nyc npm test
+        npx nyc report --reporter json-summary --report-dir .base_nyc_output --exclude-after-remap false
+
     - name: Report NYC coverage
       uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
       with:
         coverage_file: "nyc-coverage-report/coverage-summary.json"
-        base_coverage_file: ".base_nyc_output/coverage-summary.json" 
-        comment_template_file: "./comment-template.md" 
+        base_coverage_file: ".base_nyc_output/coverage-summary.json"
+        comment_template_file: "./comment-template.md"
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
   code_analysis:
