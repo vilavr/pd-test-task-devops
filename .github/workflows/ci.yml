@@ -72,6 +72,9 @@ jobs:
       id: lint_time
       run: echo "lint_time=$(( ${{ env.lint_end_time }} - ${{ env.lint_start_time }} ))" >> $GITHUB_ENV
 
+    - name: Clear Coverage Directory
+      run: rm -rf coverage
+
     - name: Run tests and collect coverage in Docker container
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
