@@ -3,6 +3,8 @@ name: CI and Code Analysis
 on:
   push:
     branches: '*'
+  pull_request:
+    branches: '*'
 
 jobs:
   build:
@@ -92,10 +94,20 @@ jobs:
           --report-dir nyc-coverage-report \
           --exclude-after-remap false
 
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: nyc-coverage-report/coverage-summary.json
+
+    - name: Coverage summary
+      run: npx nyc report --reporter=text-summary
+
     - name: Report NYC coverage
       uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
       with:
         coverage_file: "nyc-coverage-report/coverage-summary.json"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
   code_analysis:
     needs: build
