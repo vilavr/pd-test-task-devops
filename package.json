@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/app.ts",
     "test": "jest",
-    "coverage": "jest --coverage && cat ./coverage/lcov.info | coveralls",
+    "coverage": "jest --coverage && jest-coverage-badges",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [],
