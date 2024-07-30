@@ -74,6 +74,7 @@ jobs:
       run: |
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops bash -c "npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json && npm run coverage && chmod -R 755 /usr/src/app/test-results && node jest-to-ctrf.js && chmod -R 755 /usr/src/app/coverage"
 
+   
     - name: Generate Coverage Badges
       run: docker run --rm -v $PWD/coverage:/usr/src/app/coverage pd-test-task-devops npx jest-coverage-badges
 
@@ -109,7 +110,6 @@ jobs:
           const lintFilePath = 'lint-results.txt';
           const testFilePath = 'test-results/test-results.json';
           const coverageSummaryPath = 'coverage/coverage-summary.json';
-          const coverageBadge = 'coverage/badge.svg';
       
           const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
           const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
@@ -157,42 +157,27 @@ jobs:
 
     - name: Add to job summary
       run: |
-        const fs = require('fs');
-        const lintFilePath = 'lint-results.txt';
-        const testFilePath = 'test-results/test-results.json';
-        const coverageSummaryPath = 'coverage/coverage-summary.json';
-        const coverageBadge = 'coverage/badge.svg';
-      
-        const lintResults = fs.existsSync(lintFilePath) ? fs.readFileSync(lintFilePath, 'utf8') : 'No lint results found.';
-        const testResults = fs.existsSync(testFilePath) ? JSON.parse(fs.readFileSync(testFilePath, 'utf8')) : null;
-        const coverageSummary = fs.existsSync(coverageSummaryPath) ? JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8')) : null;
-      
-        const totalTests = testResults ? testResults.numTotalTests : 0;
-        const passedTests = testResults ? testResults.numPassedTests : 0;
-        const failedTests = testResults ? testResults.numFailedTests : 0;
-        const testExecutionTime = testResults ? testResults.testResults.reduce((acc, result) => acc + result.duration, 0) / 1000 : 0;
-
         echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
         echo "### Lint Results" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "${lintResults}" >> $GITHUB_STEP_SUMMARY
+        echo "$(cat lint-results.txt)" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         echo "### Test Results" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Total Tests: ${totalTests}" >> $GITHUB_STEP_SUMMARY
-        echo "- Passed Tests: ${passedTests}" >> $GITHUB_STEP_SUMMARY
-        echo "- Failed Tests: ${failedTests}" >> $GITHUB_STEP_SUMMARY
-        echo "- Test Execution Time: ${testExecutionTime.toFixed(2)} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- Total Tests: $(jq '.numTotalTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- Passed Tests: $(jq '.numPassedTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- Failed Tests: $(jq '.numFailedTests' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
+        echo "- Test Execution Time: $(jq '[.testResults[].duration] | add / 1000' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         echo "### CI/CD Metrics" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Build Time: ${process.env.build_time} seconds" >> $GITHUB_STEP_SUMMARY
-        echo "- Lint Time: ${process.env.lint_time} seconds" >> $GITHUB_STEP_SUMMARY
-        echo "- Test Time: ${testExecutionTime.toFixed(2)} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- Build Time: ${build_time} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- Lint Time: ${lint_time} seconds" >> $GITHUB_STEP_SUMMARY
+        echo "- Test Time: $(jq '[.testResults[].duration] | add / 1000' test-results/test-results.json)" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         echo "### Coverage Summary" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        echo "${coverageSummary ? JSON.stringify(coverageSummary, null, 2) : 'No coverage summary found.'}" >> $GITHUB_STEP_SUMMARY
+        echo "$(cat coverage/coverage-summary.json)" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         echo "![Coverage Badge](coverage/badge.svg)" >> $GITHUB_STEP_SUMMARY
 
