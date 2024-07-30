@@ -78,6 +78,8 @@ jobs:
       run: npm install nyc --save-dev
 
     - name: Run tests with coverage
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
       run: npx nyc npm test
 
     - name: Upload Coverage Report
@@ -88,7 +90,7 @@ jobs:
 
     - name: Coverage summary
       run: npx nyc report --reporter=text-summary
-      
+
   code_analysis:
     needs: build
     if: github.event_name == 'pull_request'
@@ -110,6 +112,7 @@ jobs:
       with:
         name: dependency-check-report
         path: dependency-check-report
+
   security_analysis:
     needs: build
     runs-on: ubuntu-latest
