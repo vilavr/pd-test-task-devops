@@ -88,7 +88,7 @@ jobs:
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
 
     - name: Stash changes
-      run: git stash
+      run: git diff --quiet || git stash
 
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
