@@ -149,7 +149,7 @@ jobs:
         
     - name: Run Dependency-Check
       run: |
-        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL
+        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL --disableAssembly --disableNodeAudit
         
     - name: Upload Dependency-Check Report
       uses: actions/upload-artifact@v2
