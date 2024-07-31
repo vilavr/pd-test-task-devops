@@ -14,10 +14,21 @@ export const requestMetrics = {
     });
     next();
   },
-  getMetrics: () => ({
-    meanRequestDuration: requestDurations.reduce((a, b) => a + b, 0) / requestDurations.length || 0,
-    totalRequests: requestCount,
-  }),
+  getMetrics: () => {
+    try {
+      const meanRequestDuration = requestDurations.reduce((a, b) => a + b, 0) / requestDurations.length || 0;
+      return {
+        meanRequestDuration,
+        totalRequests: requestCount,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('An unknown error occurred');
+      }
+    }
+  },
   resetMetrics: () => {
     requestCount = 0;
     requestDurations.length = 0;

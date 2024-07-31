@@ -80,4 +80,36 @@ describe('Deal Controller', () => {
     const response = await request(app).put('/deals/1').send(invalidDeal);
     expect(response.status).toBe(500);
   });
+
+  it('should handle unknown error in fetchDeals', async () => {
+    jest.spyOn(dealService, 'fetchDeals').mockImplementationOnce(() => {
+      throw 'Unknown error';
+    });
+
+    const response = await request(app).get('/deals');
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'An unknown error occurred');
+  });
+
+  it('should handle unknown error in createDeal', async () => {
+    jest.spyOn(dealService, 'createDeal').mockImplementationOnce(() => {
+      throw 'Unknown error';
+    });
+
+    const newDeal = { title: 'Test Deal' };
+    const response = await request(app).post('/deals').send(newDeal);
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'An unknown error occurred');
+  });
+
+  it('should handle unknown error in modifyDeal', async () => {
+    jest.spyOn(dealService, 'modifyDeal').mockImplementationOnce(() => {
+      throw 'Unknown error';
+    });
+
+    const updatedDeal = { title: 'Updated Test Deal' };
+    const response = await request(app).put('/deals/1').send(updatedDeal);
+    expect(response.status).toBe(500);
+    expect(response.body).toHaveProperty('error', 'An unknown error occurred');
+  });
 });

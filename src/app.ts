@@ -16,7 +16,15 @@ app.use(logger);
 app.use('/deals', dealRoutes);
 
 app.get('/metrics', (req, res) => {
-  res.json(requestMetrics.getMetrics());
+  try {
+    res.json(requestMetrics.getMetrics());
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'An unknown error occurred' });
+    }
+  }
 });
 
 app.listen(PORT, () => {
