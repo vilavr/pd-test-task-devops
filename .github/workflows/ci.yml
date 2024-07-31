@@ -31,6 +31,7 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
+
     - name: Install dependencies
       run: npm ci
 
@@ -89,14 +90,11 @@ jobs:
     - name: Run tests with coverage
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
-      run: npx nyc npm test
+      run: npx nyc npm run coverage:nyc
 
     - name: Generate NYC report
       run: |
-        npx nyc report \
-          --reporter json-summary \
-          --report-dir nyc-coverage-report \
-          --exclude-after-remap false
+        npx nyc report --reporter=json-summary --report-dir=nyc-coverage-report --exclude-after-remap=false
 
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v2
@@ -122,11 +120,11 @@ jobs:
     - name: Run tests with coverage on base branch
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
-      run: npx nyc npm test
+      run: npx nyc npm run coverage:nyc
 
     - name: Generate base NYC report
       run: |
-        npx nyc report --reporter json-summary --report-dir .base_nyc_output --exclude-after-remap false
+        npx nyc report --reporter=json-summary --report-dir=.base_nyc_output --exclude-after-remap=false
 
     - name: Checkout pull request branch
       run: git checkout ${{ github.event.pull_request.head.ref }}
