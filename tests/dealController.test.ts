@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import dealRoutes from '../src/routes/dealRoutes';
 import dotenv from 'dotenv';
+import * as dealService from '../src/services/dealService';
 
 dotenv.config();
 
@@ -17,7 +18,7 @@ describe('Deal Controller', () => {
   });
 
   it('should handle error when fetching deals', async () => {
-    jest.spyOn(require('../src/services/dealService'), 'fetchDeals').mockImplementationOnce(() => {
+    jest.spyOn(dealService, 'fetchDeals').mockImplementationOnce(() => {
       throw new Error('Fetch deals failed');
     });
 
@@ -34,7 +35,7 @@ describe('Deal Controller', () => {
   });
 
   it('should handle error when creating a new deal', async () => {
-    jest.spyOn(require('../src/services/dealService'), 'createDeal').mockImplementationOnce(() => {
+    jest.spyOn(dealService, 'createDeal').mockImplementationOnce(() => {
       throw new Error('Create deal failed');
     });
 
@@ -58,7 +59,7 @@ describe('Deal Controller', () => {
   });
 
   it('should handle error when updating a deal', async () => {
-    jest.spyOn(require('../src/services/dealService'), 'modifyDeal').mockImplementationOnce(() => {
+    jest.spyOn(dealService, 'modifyDeal').mockImplementationOnce(() => {
       throw new Error('Update deal failed');
     });
 
