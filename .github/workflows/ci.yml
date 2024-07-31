@@ -3,7 +3,7 @@ name: CI and Code Analysis
 on:
   push:
     branches: '*'
-  pull_request:
+  pull_request_target:
     branches: '*'
 
 permissions:
