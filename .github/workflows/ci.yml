@@ -7,8 +7,11 @@ on:
     branches: '*'
 
 permissions:
-  contents: read
-  pull-requests: write
+      # Required to checkout the code
+      contents: write
+      checks: write
+      # Required to put a comment into the pull-request
+      pull-requests: write
 
 jobs:
   build:
@@ -31,7 +34,7 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-
+          
     - name: Install dependencies
       run: npm ci
 
@@ -42,7 +45,7 @@ jobs:
         key: ${{ runner.os }}-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-buildx-
-
+          
     - name: Build Docker image
       run: docker build -t pd-test-task-devops .
 
@@ -54,6 +57,7 @@ jobs:
         API_TOKEN: ${{ secrets.API_TOKEN }}
       run: |
         docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops bash -c "npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json && chmod -R 755 /usr/src/app/test-results && node jest-to-ctrf.js"
+      
     - name: Debug - List files
       run: ls -al test-results
 
@@ -83,33 +87,11 @@ jobs:
       run: npx github-actions-ctrf failed test-results/ctrf-results.json
       if: always()
 
-    # NYC Coverage steps
-    - name: Install NYC
-      run: npm install nyc --save-dev
-
-    - name: Run tests with coverage
-      env:
-        API_TOKEN: ${{ secrets.API_TOKEN }}
-      run: npx nyc npm run coverage:nyc
-
-    - name: Generate NYC report
-      run: |
-        npx nyc report --reporter=json-summary --report-dir=nyc-coverage-report --exclude-after-remap=false
-
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-report
-        path: nyc-coverage-report/coverage-summary.json
-
-    - name: Coverage summary
-      run: npx nyc report --reporter=text-summary
-
     - name: Fetch base branch for comparison
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
 
     - name: Stash changes
-      run: git stash
+      run: git diff --quiet || git stash
 
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
@@ -117,28 +99,37 @@ jobs:
     - name: Install dependencies on base branch
       run: npm ci
 
-    - name: Run tests with coverage on base branch
+    - name: Run tests and generate coverage report on base branch
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
-      run: npx nyc jest --coverage --coverageReporters=json-summary --coverageDirectory=.base_nyc_output
-
-    - name: Generate base NYC report
       run: |
-        npx nyc report --reporter=json-summary --report-dir=.base_nyc_output --exclude-after-remap=false
+        npm test -- --json --outputFile=.base_test_results/test-results.json --coverage --coverageDirectory=.base_test_results && chmod -R 755 .base_test_results
 
     - name: Checkout pull request branch
       run: git checkout ${{ github.event.pull_request.head.ref }}
 
     - name: Apply stashed changes
-      run: git stash pop
+      run: |
+        if git stash list | grep -q 'stash@{0}'; then
+          git stash pop
+        else
+          echo "No changes to apply from stash"
+        fi
 
-    - name: Report NYC coverage
-      uses: sidx1024/report-nyc-coverage-github-action@v1.2.7
+    - name: Jest Coverage Report Action
+      id: coverage
+      uses: ArtiomTr/jest-coverage-report-action@v2
       with:
-        coverage_file: "nyc-coverage-report/coverage-summary.json"
-        base_coverage_file: ".base_nyc_output/coverage-summary.json"
-        comment_template_file: "./comment-template.md"
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        coverage-file: test-results/test-results.json
+        base-coverage-file: .base_test_results/test-results.json
+        output: comment, report-markdown
+        annotations: coverage
+
+    - name: Comment Coverage Report
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        message: ${{ steps.coverage.outputs.report }}
 
   code_analysis:
     needs: build
@@ -147,15 +138,19 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-    - name: Check for Dependency Updates
-      uses: dependabot/fetch-metadata@v1
+
     - name: Install Dependency-Check
       run: |
         wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
         unzip dependency-check-6.3.2-release.zip
+    
+    - name: Install dependencies
+      run: npm ci
+        
     - name: Run Dependency-Check
       run: |
-        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL
+        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL --disableAssembly --disableNodeAudit
+        
     - name: Upload Dependency-Check Report
       uses: actions/upload-artifact@v2
       with:

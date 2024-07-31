@@ -34,6 +34,7 @@
     "eslint": "^8.57.0",
     "jest": "^29.7.0",
     "jest-json-reporter": "^1.2.2",
+    "node-mocks-http": "^1.15.1",
     "nyc": "^17.0.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.3",
@@ -42,11 +43,23 @@
     "vitest": "^2.0.4"
   },
   "nyc": {
-    "include": ["src/**/*.ts"],
-    "exclude": ["**/*.d.ts", "test/**"],
-    "reporter": ["text", "text-summary", "json-summary", "lcov"],
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "test/**"
+    ],
+    "reporter": [
+      "text",
+      "text-summary",
+      "json-summary",
+      "lcov"
+    ],
     "all": true,
-    "extension": [".ts"],
+    "extension": [
+      ".ts"
+    ],
     "cache": false
   },
   "jest": {
@@ -54,6 +67,11 @@
     "testEnvironment": "node",
     "collectCoverage": true,
     "coverageDirectory": "./coverage",
-    "coverageReporters": ["json", "lcov", "text", "clover"]
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text",
+      "clover"
+    ]
   }
 }
