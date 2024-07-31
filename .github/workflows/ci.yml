@@ -106,7 +106,12 @@ jobs:
       run: git checkout ${{ github.event.pull_request.head.ref }}
 
     - name: Apply stashed changes
-      run: git stash pop
+      run: |
+        if git stash list | grep -q 'stash@{0}'; then
+          git stash pop
+        else
+          echo "No changes to apply from stash"
+        fi
 
     - name: Jest Coverage Report Action
       uses: ArtiomTr/jest-coverage-report-action@v2
