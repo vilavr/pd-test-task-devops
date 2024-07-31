@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import { requestMetrics } from '../src/utils/metrics'; 
+import { requestMetrics } from '../src/utils/metrics';
 import dealRoutes from '../src/routes/dealRoutes';
 import dotenv from 'dotenv';
 
@@ -14,7 +14,7 @@ app.get('/metrics', (req, res) => {
   res.json(requestMetrics.getMetrics());
 });
 
-jest.setTimeout(30000); 
+jest.setTimeout(30000);
 
 describe('Request Metrics Middleware', () => {
   beforeEach(() => {
@@ -45,5 +45,5 @@ describe('Request Metrics Middleware', () => {
     expect(metrics.totalRequests).toBe(20); // Ensure only the new requests are counted
     expect(metrics.meanRequestDuration).toBeGreaterThan(0);
     expect(metrics.meanRequestDuration).toBeLessThan(500);
-  }, 20000); 
+  }, 20000);
 });
