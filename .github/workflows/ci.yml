@@ -126,10 +126,6 @@ jobs:
         output: comment, report-markdown
         annotations: coverage
 
-    - name: Comment Coverage Report
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        message: ${{ steps.coverage.outputs.report }}
 
   code_analysis:
     needs: build
