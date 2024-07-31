@@ -117,6 +117,7 @@ jobs:
         fi
 
     - name: Jest Coverage Report Action
+      id: coverage
       uses: ArtiomTr/jest-coverage-report-action@v2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
