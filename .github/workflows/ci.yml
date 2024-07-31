@@ -36,62 +36,14 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run npm audit and generate report
-      run: npm audit --json > audit-report.json || true
-
-    - name: Upload npm audit report
-      uses: actions/upload-artifact@v2
+    - name: Run npm audit fix and create pull request
+      uses: ybiquitous/npm-audit-fix-action@v2
       with:
-        name: audit-report
-        path: audit-report.json
-
-    - name: Parse npm audit report and generate markdown
-      id: parse-audit
-      run: |
-        # Install jq and mustache (or other templating engine)
-        sudo apt-get install -y jq
-        sudo apt-get install -y npm
-        npm install -g mustache
-
-        # Parse the audit report
-        audit_report=$(cat audit-report.json)
-        vulnerabilities=$(echo "$audit_report" | jq '.metadata.vulnerabilities')
-        dependencies=$(echo "$audit_report" | jq '.metadata.dependencies')
-        vulnerabilities_list=$(echo "$audit_report" | jq -r '.vulnerabilities | to_entries[] | .value')
-
-        # Create a data file for the template
-        echo '{
-          "prod": $(echo $dependencies | jq '.prod'),
-          "dev": $(echo $dependencies | jq '.dev'),
-          "optional": $(echo $dependencies | jq '.optional'),
-          "peer": $(echo $dependencies | jq '.peer'),
-          "peerOptional": $(echo $dependencies | jq '.peerOptional'),
-          "total": $(echo $vulnerabilities | jq '.total'),
-          "low": $(echo $vulnerabilities | jq '.low'),
-          "moderate": $(echo $vulnerabilities | jq '.moderate'),
-          "high": $(echo $vulnerabilities | jq '.high'),
-          "critical": $(echo $vulnerabilities | jq '.critical'),
-          "vulnerabilities": [
-            $(echo $vulnerabilities_list | jq -r '{
-              "package": .name,
-              "severity": .severity,
-              "version": .range,
-              "path": (.via | map(.source) | join(", "))
-            }')
-          ]
-        }' > audit-data.json
-
-        # Generate markdown report using the template
-        mustache audit-data.json audit-report-template.md > audit-report.md
-
-    - name: Upload generated markdown report
-      uses: actions/upload-artifact@v2
-      with:
-        name: audit-report
-        path: audit-report.md
-
-    - name: Add audit report to step summary
-      run: cat audit-report.md >> $GITHUB_STEP_SUMMARY
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: 'npm-audit-fix-action/fix'
+        default_branch: 'main'
+        commit_title: 'build(deps): npm audit fix'
+        labels: 'dependencies, javascript, security'
 
     - name: Cache Docker layers
       uses: actions/cache@v2
@@ -181,7 +133,6 @@ jobs:
         output: comment, report-markdown
         annotations: coverage
 
-
   code_analysis:
     needs: build
     if: github.event_name == 'pull_request'
@@ -207,6 +158,7 @@ jobs:
       with:
         name: dependency-check-report
         path: dependency-check-report
+
   security_analysis:
     needs: build
     runs-on: ubuntu-latest
