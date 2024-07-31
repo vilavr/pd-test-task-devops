@@ -83,6 +83,8 @@ jobs:
 
     # Jest Coverage Report steps
     - name: Run tests and generate coverage report
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
       run: npm test -- --coverage --json --outputFile=test-results/coverage-report.json
 
     - name: Upload Coverage Report
