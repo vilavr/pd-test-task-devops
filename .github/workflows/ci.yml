@@ -122,6 +122,13 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         coverage-file: test-results/test-results.json
         base-coverage-file: .base_test_results/test-results.json
+        output: comment, report-markdown
+        annotations: coverage
+
+    - name: Comment Coverage Report
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        message: ${{ steps.coverage.outputs.report }}
 
   code_analysis:
     needs: build
