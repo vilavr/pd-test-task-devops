@@ -120,7 +120,7 @@ jobs:
     - name: Run tests with coverage on base branch
       env:
         API_TOKEN: ${{ secrets.API_TOKEN }}
-      run: npx nyc npm run coverage:nyc
+      run: npx nyc jest --coverage --coverageReporters=json-summary --coverageDirectory=.base_nyc_output
 
     - name: Generate base NYC report
       run: |
