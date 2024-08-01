@@ -52,6 +52,11 @@ jobs:
       run: |
         git rebase origin/main
 
+    - name: Pull latest changes for fix branch
+      run: |
+        git pull origin npm-audit-fix-action/fix --rebase
+
+
     - name: Run npm audit fix and create pull request
       uses: ybiquitous/npm-audit-fix-action@v2
       with:
