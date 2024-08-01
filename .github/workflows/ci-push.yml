@@ -59,15 +59,15 @@ jobs:
       continue-on-error: true
 
     - name: Publish CTRF Test Summary Results
-      run: npx github-actions-ctrf summary ctrf-results/ctrf-results.json
+      run: npx github-actions-ctrf summary test-results/ctrf-results.json
       if: always()
   
     - name: Publish CTRF Detailed Test Summary Results
-      run: npx github-actions-ctrf tests ctrf-results/ctrf-results.json
+      run: npx github-actions-ctrf tests test-results/ctrf-results.json
       if: always()
   
     - name: Publish CTRF Failed Test Summary Results
-      run: npx github-actions-ctrf failed ctrf-results/ctrf-results.json
+      run: npx github-actions-ctrf failed test-results/ctrf-results.json
       if: always()
 
     - name: Fail the workflow if tests failed
