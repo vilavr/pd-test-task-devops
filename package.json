@@ -21,7 +21,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jest-coverage-badges": "^1.0.0",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "lodash": "4.17.19" 
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
