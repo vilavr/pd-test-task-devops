@@ -59,6 +59,7 @@ jobs:
 
     - name: Run npm audit fix and create pull request
       uses: ybiquitous/npm-audit-fix-action@v2
+      continue-on-error: true
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: 'npm-audit-fix-action/fix'
@@ -66,6 +67,9 @@ jobs:
         commit_title: 'build(deps): npm audit fix'
         labels: 'dependencies, javascript, security'
 
+    - name: Force push changes
+      run: |
+        git push origin npm-audit-fix-action/fix --force
 
     - name: Cache Docker layers
       uses: actions/cache@v2
