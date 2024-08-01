@@ -103,12 +103,7 @@ jobs:
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
 
-    - name: Install dependencies with npm ci
-      run: npm ci
-      continue-on-error: true
-
-    - name: Install dependencies with npm install (fallback)
-      if: failure()
+    - name: Install dependencies with npm install
       run: npm install
 
     - name: Run tests and generate coverage report on base branch
