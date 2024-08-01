@@ -94,8 +94,8 @@ jobs:
         path: test-results/ctrf-results.json
 
     - name: Trigger CI Pull Request Workflow
-      uses: peter-evans/repository-dispatch@v1
-      with:
-        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        event-type: ci-pull-request
-        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "workflow_id": "${{ github.run_id }}"}'
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci-pull.yml/dispatches \
+        -d '{"ref":"${{ github.ref }}", "inputs": {"workflow_id": "${{ github.run_id }}", "sha": "${{ github.sha }}", "ref": "${{ github.ref }}"}}'

@@ -1,8 +1,17 @@
 name: CI - Pull Requests
 
 on:
-  repository_dispatch:
-    types: [ci-pull-request]
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        description: 'The workflow run ID from the push workflow'
+        required: true
+      sha:
+        description: 'The SHA of the commit'
+        required: true
+      ref:
+        description: 'The ref of the commit'
+        required: true
 
 permissions:
       contents: write
@@ -16,12 +25,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: ${{ github.event.client_payload.ref }}
+        ref: ${{ github.event.inputs.ref }}
 
     - name: Download Test Results
       uses: dawidd6/action-download-artifact@v2
       with:
-        workflow: ${{ github.event.client_payload.workflow_id }}
+        workflow: ${{ github.event.inputs.workflow_id }}
         name: test-results
         path: test-results
         workflow_conclusion: success
@@ -29,7 +38,7 @@ jobs:
     - name: Download Base Test Results
       uses: dawidd6/action-download-artifact@v2
       with:
-        workflow: ${{ github.event.client_payload.workflow_id }}
+        workflow: ${{ github.event.inputs.workflow_id }}
         name: base-test-results
         path: base-test-results
         workflow_conclusion: success
@@ -37,7 +46,7 @@ jobs:
     - name: Download CTRF Results
       uses: dawidd6/action-download-artifact@v2
       with:
-        workflow: ${{ github.event.client_payload.workflow_id }}
+        workflow: ${{ github.event.inputs.workflow_id }}
         name: ctrf-results
         path: ctrf-results
         workflow_conclusion: success
