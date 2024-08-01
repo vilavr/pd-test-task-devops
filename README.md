@@ -145,7 +145,7 @@ Reasons:
 - Avoids redundant testing by reusing artifacts, reducing billable time and resources.
 - Dependency checks ensure no vulnerable packages are introduced.
 - CTRF and Jest summaries provide developers with clear, actionable feedback, they don't need to waste time digging through logs.
-- If the tests fail, we still generate summary, but the workflow fails later to protect from deploying failing code, but still provide pretty summary. [Example of failed test summary]: (https://github.com/vilavr/pd-test-task-devops/actions/runs/10199663936)
+- If the tests fail, we still generate summary, but the workflow fails later to protect from deploying failing code, but still provide pretty summary: [Example of failed test summary](https://github.com/vilavr/pd-test-task-devops/actions/runs/10199663936)
 - Examples of coverage information:
   - Comment showing how the coverage improved (or worsened) compared to the base branch of PR: [Coverage Comment Example](https://github.com/vilavr/pd-test-task-devops/pull/5#issuecomment-2260082141)
   - Annotations generated where the code is not covered: [Coverage Annotations Example](https://github.com/vilavr/pd-test-task-devops/actions/runs/10198630129)
