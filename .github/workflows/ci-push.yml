@@ -75,25 +75,27 @@ jobs:
           echo "No changes to apply from stash"
         fi
 
-    - name: Upload artifacts
+    - name: Upload Test Results
       uses: actions/upload-artifact@v2
       with:
         name: test-results
         path: test-results/test-results.json
-    - name: Upload base test results
+
+    - name: Upload Base Test Results
       uses: actions/upload-artifact@v2
       with:
         name: base-test-results
         path: .base_test_results/test-results.json
-    - name: Upload CTRF results
+
+    - name: Upload CTRF Results
       uses: actions/upload-artifact@v2
       with:
         name: ctrf-results
         path: test-results/ctrf-results.json
 
-    - name: Repository Dispatch
-      uses: peter-evans/repository-dispatch@v3
+    - name: Trigger CI Pull Request Workflow
+      uses: peter-evans/repository-dispatch@v1
       with:
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        event-type: my-event
-        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+        event-type: ci-pull-request
+        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}", "workflow_id": "${{ github.run_id }}"}'

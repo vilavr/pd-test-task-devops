@@ -1,8 +1,8 @@
-name: Repository Dispatch
+name: CI - Pull Requests
 
 on:
   repository_dispatch:
-    types: [my-event]
+    types: [ci-pull-request]
 
 permissions:
       contents: write
@@ -10,7 +10,7 @@ permissions:
       pull-requests: write
 
 jobs:
-  myEvent:
+  generate_reports:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,22 +19,28 @@ jobs:
         ref: ${{ github.event.client_payload.ref }}
 
     - name: Download Test Results
-      uses: actions/download-artifact@v2
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: ${{ github.event.client_payload.workflow_id }}
         name: test-results
         path: test-results
+        workflow_conclusion: success
 
     - name: Download Base Test Results
-      uses: actions/download-artifact@v2
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: ${{ github.event.client_payload.workflow_id }}
         name: base-test-results
         path: base-test-results
+        workflow_conclusion: success
 
     - name: Download CTRF Results
-      uses: actions/download-artifact@v2
+      uses: dawidd6/action-download-artifact@v2
       with:
+        workflow: ${{ github.event.client_payload.workflow_id }}
         name: ctrf-results
         path: ctrf-results
+        workflow_conclusion: success
 
     - name: Jest Coverage Report Action
       id: coverage
@@ -65,7 +71,7 @@ jobs:
 
   code_analysis:
     runs-on: ubuntu-latest
-    needs: myEvent
+    needs: generate_reports
 
     steps:
     - name: Checkout repository
@@ -91,7 +97,7 @@ jobs:
 
   security_analysis:
     runs-on: ubuntu-latest
-    needs: myEvent
+    needs: generate_reports
 
     steps:
     - name: Checkout repository
