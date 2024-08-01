@@ -55,7 +55,7 @@ jobs:
 
     - name: Rebase on top of the latest main branch
       run: |
-        git rebase origin/main
+        git rebase origin/main --skip
 
     - name: Pull latest changes for fix branch
       run: |
