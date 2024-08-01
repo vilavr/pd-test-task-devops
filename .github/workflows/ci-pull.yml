@@ -1,0 +1,111 @@
+name: CI - Pull Requests
+
+on:
+  workflow_dispatch:
+    inputs:
+      workflow_id:
+        description: 'The workflow run ID from the push workflow'
+        required: true
+      sha:
+        description: 'The SHA of the commit'
+        required: true
+      ref:
+        description: 'The ref of the commit'
+        required: true
+
+permissions:
+    id-token: write
+    pull-requests: write
+    actions: read
+    contents: write
+    checks: write
+
+jobs:
+  generate_reports:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - name: Download Test Results
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: ci-push.yml
+        name: test-results
+        path: test-results
+        workflow_conclusion: success
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+    - name: Download Base Test Results
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: ci-push.yml
+        name: base-test-results
+        path: base-test-results
+        workflow_conclusion: success
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+
+    - name: Jest Coverage Report Action
+      id: coverage
+      uses: ArtiomTr/jest-coverage-report-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        coverage-file: test-results/test-results.json
+        base-coverage-file: base-test-results/test-results.json
+        output: comment, report-markdown
+        annotations: coverage
+
+    - name: Comment Coverage Report
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        message: ${{ steps.coverage.outputs.report }}
+
+  code_analysis:
+    runs-on: ubuntu-latest
+    needs: generate_reports
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Dependency-Check
+      run: |
+        wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
+        unzip dependency-check-6.3.2-release.zip
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Dependency-Check
+      run: |
+        ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL --disableAssembly --disableNodeAudit
+
+    - name: Upload Dependency-Check Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: dependency-check-report
+        path: dependency-check-report
+
+  security_analysis:
+    runs-on: ubuntu-latest
+    needs: generate_reports
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/security"

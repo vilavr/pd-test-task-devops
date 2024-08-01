@@ -1,0 +1,135 @@
+name: CI - Push Events
+
+on:
+  push:
+    branches: '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Cache Node.js modules
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+          
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit
+      run: npm audit --json > audit-results.json
+
+    - name: Upload npm audit results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: audit-results
+        path: audit-results.json
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+          
+    - name: Build Docker image
+      run: docker build -t pd-test-task-devops .
+
+    - name: Lint code
+      run: docker run --rm pd-test-task-devops npm run lint > lint-results.txt
+
+    - name: Run tests in Docker container
+      id: run_tests
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
+      run: |
+        set -e
+        docker run --rm -e API_TOKEN=$API_TOKEN -v $PWD/test-results:/usr/src/app/test-results pd-test-task-devops bash -c "
+          npm test -- --json --outputFile=/usr/src/app/test-results/test-results.json || true
+          node jest-to-ctrf.js
+        "
+      continue-on-error: true
+
+    - name: Publish CTRF Test Summary Results
+      run: npx github-actions-ctrf summary test-results/ctrf-results.json
+      if: always()
+  
+    - name: Publish CTRF Detailed Test Summary Results
+      run: npx github-actions-ctrf tests test-results/ctrf-results.json
+      if: always()
+  
+    - name: Publish CTRF Failed Test Summary Results
+      run: npx github-actions-ctrf failed test-results/ctrf-results.json
+      if: always()
+
+    - name: Fail the workflow if tests failed
+      if: steps.run_tests.outcome == 'failure'
+      run: |
+        echo "Tests failed, look at the summary and fix them :)"
+        exit 1
+
+    - name: Fetch base branch for comparison
+      run: git fetch origin ${{ github.ref }} --depth=1000
+
+    - name: Stash changes
+      run: git diff --quiet || git stash
+
+    - name: Checkout base branch
+      run: git checkout ${{ github.ref }}
+
+    - name: Install dependencies on base branch
+      run: npm ci
+
+    - name: Run tests and generate coverage report on base branch
+      env:
+        API_TOKEN: ${{ secrets.API_TOKEN }}
+      run: |
+        npm test -- --json --outputFile=.base_test_results/test-results.json --coverage --coverageDirectory=.base_test_results && chmod -R 755 .base_test_results
+
+    - name: Checkout push branch
+      run: git checkout ${{ github.head_ref }}
+
+    - name: Apply stashed changes
+      run: |
+        if git stash list | grep -q 'stash@{0}'; then
+          git stash pop
+        else
+          echo "No changes to apply from stash"
+        fi
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test-results/test-results.json
+
+    - name: Upload Base Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: base-test-results
+        path: .base_test_results/test-results.json
+
+    - name: Upload CTRF Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: ctrf-results
+        path: test-results/ctrf-results.json
+
+    - name: Trigger CI Pull Request Workflow
+      run: |
+        curl -X POST -H "Accept: application/vnd.github.v3+json" \
+        -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+        https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci-pull.yml/dispatches \
+        -d '{"ref":"${{ github.ref }}", "inputs": {"workflow_id": "${{ github.run_id }}", "sha": "${{ github.sha }}", "ref": "${{ github.ref }}"}}'
