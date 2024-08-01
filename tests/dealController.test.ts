@@ -54,7 +54,7 @@ describe('Deal Controller', () => {
   it('should update an existing deal', async () => {
     const updatedDeal = { title: 'Updated Test Deal' };
     const response = await request(app).put('/deals/1').send(updatedDeal);
-    expect(response.status).toBe(205);
+    expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('title', 'Updated Test Deal');
   });
 
