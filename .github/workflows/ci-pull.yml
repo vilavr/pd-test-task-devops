@@ -15,9 +15,10 @@ on:
 
 permissions:
     id-token: write
-    contents: read
     pull-requests: write
     actions: read
+    contents: write
+    checks: write
 
 jobs:
   generate_reports:
@@ -63,7 +64,7 @@ jobs:
       id: coverage
       uses: ArtiomTr/jest-coverage-report-action@v2
       with:
-        github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         coverage-file: test-results/test-results.json
         base-coverage-file: base-test-results/test-results.json
         output: comment, report-markdown
