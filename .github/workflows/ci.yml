@@ -36,6 +36,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    - name: Configure Git user locally
+      run: |
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+
     - name: Fetch latest changes
       run: git fetch origin
 
@@ -47,22 +52,15 @@ jobs:
       run: |
         git rebase origin/main
 
-    - name: Commit and push changes
-      run: |
-        git add .
-        git commit -m "build(deps): npm audit fix"
-        git push origin npm-audit-fix-action/fix --force
-
-    - name: Create pull request
-      uses: peter-evans/create-pull-request@v4
+    - name: Run npm audit fix and create pull request
+      uses: ybiquitous/npm-audit-fix-action@v2
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        commit-message: "build(deps): npm audit fix"
-        branch: npm-audit-fix-action/fix
-        base: main
-        title: "[Security] npm audit fix"
-        body: "This PR fixes vulnerabilities found in npm packages."
-        labels: dependencies, javascript, security
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: 'npm-audit-fix-action/fix'
+        default_branch: 'main'
+        commit_title: 'build(deps): npm audit fix'
+        labels: 'dependencies, javascript, security'
+
 
     - name: Cache Docker layers
       uses: actions/cache@v2
