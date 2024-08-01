@@ -22,6 +22,17 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0  # Fetch all history for accurate base comparison
 
+    - name: Clear npm cache
+      run: npm cache clean --force
+
+    - name: Install dependencies with npm ci
+      run: npm ci
+      continue-on-error: true
+
+    - name: Install dependencies with npm install (fallback)
+      if: failure()
+      run: npm install
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
@@ -32,9 +43,6 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-
-    - name: Install dependencies
-      run: npm ci
 
     - name: Run npm audit fix and create pull request
       uses: ybiquitous/npm-audit-fix-action@v2
@@ -98,13 +106,16 @@ jobs:
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
 
     - name: Stash changes
-      run: git diff --quiet || git stash
+      run: |
+        git add .
+        git commit -m "Stashing changes"
+        git stash
 
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
 
     - name: Install dependencies on base branch
-      run: npm install
+      run: npm ci
 
     - name: Run tests and generate coverage report on base branch
       env:
@@ -117,11 +128,7 @@ jobs:
 
     - name: Apply stashed changes
       run: |
-        if git stash list | grep -q 'stash@{0}'; then
-          git stash pop
-        else
-          echo "No changes to apply from stash"
-        fi
+        git stash pop || echo "No changes to apply from stash"
 
     - name: Jest Coverage Report Action
       id: coverage
