@@ -14,9 +14,10 @@ on:
         required: true
 
 permissions:
-  contents: write
-  checks: write
-  pull-requests: write
+    id-token: write
+    contents: read
+    pull-requests: write
+    actions: read
 
 jobs:
   generate_reports:
