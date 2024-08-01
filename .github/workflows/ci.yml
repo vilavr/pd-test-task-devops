@@ -103,8 +103,13 @@ jobs:
     - name: Checkout base branch
       run: git checkout ${{ github.event.pull_request.base.ref }}
 
-    - name: Install dependencies on base branch
+    - name: Install dependencies with npm ci
       run: npm ci
+      continue-on-error: true
+
+    - name: Install dependencies with npm install (fallback)
+      if: failure()
+      run: npm install
 
     - name: Run tests and generate coverage report on base branch
       env:
@@ -151,13 +156,8 @@ jobs:
         wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
         unzip dependency-check-6.3.2-release.zip
     
-    - name: Install dependencies with npm ci
+    - name: Install dependencies
       run: npm ci
-      continue-on-error: true
-  
-    - name: Install dependencies with npm install (fallback)
-      if: failure()
-      run: npm install
         
     - name: Run Dependency-Check
       run: |
