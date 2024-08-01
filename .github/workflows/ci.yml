@@ -48,10 +48,13 @@ jobs:
       uses: ybiquitous/npm-audit-fix-action@v2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_user: 'github-actions[bot]'
+        github_email: 'github-actions[bot]@users.noreply.github.com'
         branch: 'npm-audit-fix-action/fix'
         default_branch: 'main'
         commit_title: 'build(deps): npm audit fix'
         labels: 'dependencies, javascript, security'
+        npm_args: '--force'
 
     - name: Cache Docker layers
       uses: actions/cache@v2
@@ -104,6 +107,11 @@ jobs:
 
     - name: Fetch base branch for comparison
       run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1000
+
+    - name: Configure Git user
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
 
     - name: Stash changes
       run: |
