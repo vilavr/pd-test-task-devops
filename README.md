@@ -116,13 +116,38 @@ npm test
 This project uses GitHub Actions for CI/CD checks. The workflows are defined as follows:
 
 ### Continuous Integration (CI)
-The CI workflow runs on every push to the `main` or `master` branches and on every pull request. It performs the following steps:
+The CI workflow is divided into two parts:
+
+#### CI - Push
+The CI push workflow runs on every push to any branch. It performs the following steps:
 1. Checks out the repository.
 2. Sets up Node.js environment.
 3. Installs dependencies.
 4. Lints the code.
-5. Runs tests.
-6. Builds the Docker image and runs tests inside the Docker container.
+5. Runs npm audit for security checks.
+6. Builds the Docker image.
+7. Runs tests inside the Docker container.
+8. Uploads test results and coverage reports as artifacts.
+
+Reasons:
+- Ensures code quality and security with linting and npm audit.
+- Uploading artifacts allows reuse in subsequent workflows, saving time and resources.
+
+#### CI - Pull Requests
+The CI pull request workflow runs on pull request events and is triggered by the CI push workflow using the `workflow_dispatch` event. It performs the following steps:
+1. Checks out the repository.
+2. Downloads previously uploaded artifacts (test results and coverage reports).
+3. Generates coverage and test summary reports.
+4. Performs dependency checks using Dependency-Check.
+5. Publishes test summary and detailed results using the CTRF (Custom Test Reporting Framework) for clear and concise test results presentation.
+
+Reasons:
+- Avoids redundant testing by reusing artifacts, reducing billable time and resources.
+- Dependency checks ensure no vulnerable packages are introduced.
+- CTRF and Jest summaries provide developers with clear, actionable feedback, they don't need to waste time digging through logs.
+- Examples of coverage information:
+  - Comment showing how the coverage improved (or worsened) compared to the base branch of PR: [Coverage Comment Example](https://github.com/vilavr/pd-test-task-devops/pull/5#issuecomment-2260082141)
+  - Annotations generated where the code is not covered: [Coverage Annotations Example](https://github.com/vilavr/pd-test-task-devops/actions/runs/10198630129)
 
 ### Continuous Deployment (CD)
 The CD workflow runs when a pull request is merged into the `main` or `master` branches. It performs the following steps:
@@ -132,4 +157,20 @@ The CD workflow runs when a pull request is merged into the `main` or `master` b
 4. Builds the Docker image.
 5. Logs "Deployed!".
 
-The workflows are defined in the `.github/workflows` directory.
+
+### Workflow Logic
+- **CI - Push**: Triggers on every push to any branch. Runs linting, security checks (npm audit), and builds/tests inside a Docker container. Uploads results as artifacts.
+- **CI - Pull Requests**: Triggered by the CI push workflow on pull request events. Downloads the previously uploaded artifacts to avoid redundant testing, performs dependency checks, and generates and publishes test summary reports using CTRF and Jest.
+- **CD**: Triggered when a pull request is merged into the `main` or `master` branches. Handles the deployment process by building the Docker image and logging deployment.
+
+
+## Further Improvements
+I tried integrating an action that would not only check dependencies with npm audit but also create a PR to automatically fix them. 
+
+Source file: [CI Workflow for Dependency Fix](https://github.com/vilavr/pd-test-task-devops/actions/runs/10196175469/workflow)
+
+PR it created: [Dependency Fix PR](https://github.com/vilavr/pd-test-task-devops/pull/9)
+
+However, it created a lot of discrepancies between lock files in the main and current branches, and I was unable to create tasks that would work for all branches. Example of my attempts: [Failed Attempt PR](https://github.com/vilavr/pd-test-task-devops/pull/8)
+
+I'd love to discuss (if we have time in the interview) whether it makes sense to integrate this and how to do it properly.

@@ -15,9 +15,10 @@ on:
 
 permissions:
     id-token: write
-    contents: read
     pull-requests: write
     actions: read
+    contents: write
+    checks: write
 
 jobs:
   generate_reports:
@@ -49,42 +50,16 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-    - name: Download CTRF Results
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        workflow: ci-push.yml
-        name: ctrf-results
-        path: ctrf-results
-        workflow_conclusion: success
-      env:
-        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Jest Coverage Report Action
       id: coverage
       uses: ArtiomTr/jest-coverage-report-action@v2
       with:
-        github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         coverage-file: test-results/test-results.json
         base-coverage-file: base-test-results/test-results.json
         output: comment, report-markdown
         annotations: coverage
-
-    - name: Comment Coverage Report
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        message: ${{ steps.coverage.outputs.report }}
-
-    - name: Publish CTRF Test Summary Results
-      run: npx github-actions-ctrf summary ctrf-results/ctrf-results.json
-      if: always()
-
-    - name: Publish CTRF Detailed Test Summary Results
-      run: npx github-actions-ctrf tests ctrf-results/ctrf-results.json
-      if: always()
-
-    - name: Publish CTRF Failed Test Summary Results
-      run: npx github-actions-ctrf failed ctrf-results/ctrf-results.json
-      if: always()
 
   code_analysis:
     runs-on: ubuntu-latest

@@ -33,4 +33,5 @@ jobs:
       run: docker build -t pd-test-task-devops .
 
     - name: Log deployment
-      run: echo "Deployed!"
+      run: |
+        echo "Deployed! Pull Request Number: ${{ github.event.pull_request.number }}"
