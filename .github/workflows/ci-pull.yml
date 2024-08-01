@@ -14,16 +14,17 @@ on:
         required: true
 
 permissions:
-      contents: write
-      checks: write
-      pull-requests: write
+  contents: write
+  checks: write
+  pull-requests: write
 
 jobs:
   generate_reports:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
       with:
         ref: ${{ github.event.inputs.ref }}
 
@@ -34,6 +35,8 @@ jobs:
         name: test-results
         path: test-results
         workflow_conclusion: success
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Download Base Test Results
       uses: dawidd6/action-download-artifact@v2
@@ -42,6 +45,8 @@ jobs:
         name: base-test-results
         path: base-test-results
         workflow_conclusion: success
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Download CTRF Results
       uses: dawidd6/action-download-artifact@v2
@@ -50,6 +55,8 @@ jobs:
         name: ctrf-results
         path: ctrf-results
         workflow_conclusion: success
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
     - name: Jest Coverage Report Action
       id: coverage
@@ -65,7 +72,7 @@ jobs:
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         message: ${{ steps.coverage.outputs.report }}
-        
+
     - name: Publish CTRF Test Summary Results
       run: npx github-actions-ctrf summary ctrf-results/ctrf-results.json
       if: always()
@@ -90,14 +97,14 @@ jobs:
       run: |
         wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
         unzip dependency-check-6.3.2-release.zip
-    
+
     - name: Install dependencies
       run: npm ci
-        
+
     - name: Run Dependency-Check
       run: |
         ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL --disableAssembly --disableNodeAudit
-        
+
     - name: Upload Dependency-Check Report
       uses: actions/upload-artifact@v2
       with:
@@ -111,10 +118,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
         languages: javascript
+
     - name: Run CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
