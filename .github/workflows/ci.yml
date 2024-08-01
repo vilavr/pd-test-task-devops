@@ -117,11 +117,7 @@ jobs:
 
     - name: Apply stashed changes
       run: |
-        if git stash list | grep -q 'stash@{0}'; then
-          git stash pop
-        else
-          echo "No changes to apply from stash"
-        fi
+        git stash pop || echo "No changes to apply from stash"
 
     - name: Jest Coverage Report Action
       id: coverage
