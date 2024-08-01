@@ -75,23 +75,25 @@ jobs:
           echo "No changes to apply from stash"
         fi
 
-    - name: Upload Test Results
-      if: always()
+    - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
         name: test-results
         path: test-results/test-results.json
-
-    - name: Upload Base Test Results
-      if: always()
+    - name: Upload base test results
       uses: actions/upload-artifact@v2
       with:
         name: base-test-results
         path: .base_test_results/test-results.json
-
-    - name: Upload CTRF Results
-      if: always()
+    - name: Upload CTRF results
       uses: actions/upload-artifact@v2
       with:
         name: ctrf-results
         path: test-results/ctrf-results.json
+
+    - name: Repository Dispatch
+      uses: peter-evans/repository-dispatch@v3
+      with:
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        event-type: my-event
+        client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
