@@ -36,7 +36,7 @@ jobs:
           ${{ runner.os }}-node-
           
     - name: Install dependencies
-      run: npm ci
+      run: npm install
 
     - name: Cache Docker layers
       uses: actions/cache@v2
