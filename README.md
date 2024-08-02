@@ -75,12 +75,12 @@ TypeScript type definitions for various JavaScript libraries, ensuring type safe
 
 1. Build the Docker image:
    ```bash
-   docker build -t pd-test-task-devops .
+   sudo docker build -t pd-test-task-devops .
    ```
 
 2. Run the Docker container:
    ```bash
-   docker run -p 3000:3000 --env-file .env pd-test-task-devops
+   sudo docker run -p 3000:3000 --env-file .env pd-test-task-devops
    ```
 
 ## Usage
