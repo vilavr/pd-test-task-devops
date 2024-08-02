@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000; // run app on port from env or 3000 by de
 
 app.use(express.json());
 app.use(logger);
+app.use(requestMetrics.startTimer); 
 
 app.use('/deals', dealRoutes);
 
