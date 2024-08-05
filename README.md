@@ -149,6 +149,7 @@ Reasons:
 - Examples of coverage information:
   - Comment showing how the coverage improved (or worsened) compared to the base branch of PR: [Coverage Comment Example](https://github.com/vilavr/pd-test-task-devops/pull/5#issuecomment-2260082141)
   - Annotations generated where the code is not covered: [Coverage Annotations Example](https://github.com/vilavr/pd-test-task-devops/actions/runs/10198630129)
+- Helps to catch security concerns: [Example of raised security concern](https://github.com/vilavr/pd-test-task-devops/security/code-scanning/1)
 
 ### Continuous Deployment (CD)
 The CD workflow runs when a pull request is merged into the `main` or `master` branches. It performs the following steps:
