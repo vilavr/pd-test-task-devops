@@ -175,3 +175,4 @@ PR it created: [Dependency Fix PR](https://github.com/vilavr/pd-test-task-devops
 However, it created a lot of discrepancies between lock files in the main and current branches, and I was unable to create tasks that would work for all branches. Example of my attempts: [Failed Attempt PR](https://github.com/vilavr/pd-test-task-devops/pull/8)
 
 I'd love to discuss (if we have time in the interview) whether it makes sense to integrate this and how to do it properly.
+
