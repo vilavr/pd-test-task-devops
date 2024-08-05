@@ -149,6 +149,7 @@ Reasons:
 - Examples of coverage information:
   - Comment showing how the coverage improved (or worsened) compared to the base branch of PR: [Coverage Comment Example](https://github.com/vilavr/pd-test-task-devops/pull/5#issuecomment-2260082141)
   - Annotations generated where the code is not covered: [Coverage Annotations Example](https://github.com/vilavr/pd-test-task-devops/actions/runs/10198630129)
+- Helps to catch security concerns: [Example of raised security concern](https://github.com/vilavr/pd-test-task-devops/security/code-scanning/1)
 
 ### Continuous Deployment (CD)
 The CD workflow runs when a pull request is merged into the `main` or `master` branches. It performs the following steps:
@@ -175,3 +176,4 @@ PR it created: [Dependency Fix PR](https://github.com/vilavr/pd-test-task-devops
 However, it created a lot of discrepancies between lock files in the main and current branches, and I was unable to create tasks that would work for all branches. Example of my attempts: [Failed Attempt PR](https://github.com/vilavr/pd-test-task-devops/pull/8)
 
 I'd love to discuss (if we have time in the interview) whether it makes sense to integrate this and how to do it properly.
+

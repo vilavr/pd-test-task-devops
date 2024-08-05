@@ -11,6 +11,12 @@ axios.defaults.params = {
   api_token: API_TOKEN,
 };
 
+const validateId = (id: string) => {
+  if (!/^\d+$/.test(id)) {
+    throw new Error('Invalid deal ID format');
+  }
+};
+
 export const fetchDeals = async (): Promise<Deal[]> => {
   const response = await axios.get(BASE_URL);
   return response.data.data;
@@ -22,6 +28,7 @@ export const createDeal = async (dealData: Deal): Promise<Deal> => {
 };
 
 export const modifyDeal = async (id: string, dealData: Deal): Promise<Deal> => {
+  validateId(id);
   const response = await axios.put(`${BASE_URL}/${id}`, dealData);
   return response.data.data;
 };

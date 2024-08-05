@@ -12,6 +12,8 @@ on:
       ref:
         description: 'The ref of the commit'
         required: true
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
     id-token: write
@@ -19,6 +21,7 @@ permissions:
     actions: read
     contents: write
     checks: write
+    security-events: write
 
 jobs:
   generate_reports:
@@ -79,14 +82,12 @@ jobs:
       run: |
         wget https://github.com/jeremylong/DependencyCheck/releases/download/v6.3.2/dependency-check-6.3.2-release.zip
         unzip dependency-check-6.3.2-release.zip
-
     - name: Install dependencies
       run: npm ci
 
     - name: Run Dependency-Check
       run: |
         ./dependency-check/bin/dependency-check.sh --project MyProject --out ./dependency-check-report --scan . --format ALL --disableAssembly --disableNodeAudit
-
     - name: Upload Dependency-Check Report
       uses: actions/upload-artifact@v2
       with:

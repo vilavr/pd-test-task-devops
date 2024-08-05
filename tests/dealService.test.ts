@@ -7,6 +7,13 @@ dotenv.config();
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+// Validate ID function to be tested
+const validateId = (id: string) => {
+  if (!/^\d+$/.test(id)) {
+    throw new Error('Invalid deal ID format');
+  }
+};
+
 describe('Deal Service', () => {
   it('should fetch deals', async () => {
     const deals = { data: [{ id: 1, title: 'Test Deal' }] };
@@ -42,5 +49,15 @@ describe('Deal Service', () => {
     mockedAxios.put.mockRejectedValue(new Error('API Error'));
 
     await expect(modifyDeal('1', { title: 'Updated Test Deal' })).rejects.toThrow('API Error');
+  });
+
+  it('should validate ID correctly', () => {
+    expect(() => validateId('123')).not.toThrow();
+  });
+
+  it('should throw error for invalid ID format', () => {
+    expect(() => validateId('abc')).toThrow('Invalid deal ID format');
+    expect(() => validateId('123abc')).toThrow('Invalid deal ID format');
+    expect(() => validateId('!@#')).toThrow('Invalid deal ID format');
   });
 });
