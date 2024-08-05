@@ -21,6 +21,7 @@ permissions:
     actions: read
     contents: write
     checks: write
+    security-events: write
 
 jobs:
   generate_reports:
